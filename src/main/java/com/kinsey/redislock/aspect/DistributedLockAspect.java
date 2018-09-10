@@ -39,11 +39,11 @@ public class DistributedLockAspect {
     private LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
 
     @Pointcut("@annotation(LockAction)")
-    private void lockPoint(){
+    private void lockPoint() {
     }
 
     @Around("lockPoint()")
-    public Object around(ProceedingJoinPoint pjp) throws Throwable{
+    public Object around(ProceedingJoinPoint pjp) throws Throwable {
         Method method = ((MethodSignature) pjp.getSignature()).getMethod();
         RedisLock lockAction = method.getAnnotation(RedisLock.class);
         String key = lockAction.value();
@@ -52,28 +52,28 @@ public class DistributedLockAspect {
 
         int retryTimes = lockAction.action().equals(RedisLock.LockFailAction.CONTINUE) ? lockAction.retryTimes() : 0;
         boolean lock = distributedLock.lock(key, lockAction.keepMills(), retryTimes, lockAction.sleepMills());
-        if(!lock) {
-           // log.debug("get lock failed : " + key);
+        if (!lock) {
+            log.debug("get lock failed : " + key);
             return null;
         }
 
         //得到锁,执行方法，释放锁
-       // log.debug("get lock success : " + key);
+        log.debug("get lock success : " + key);
         try {
             return pjp.proceed();
         } catch (Exception e) {
-           // log.error("execute locked method occured an exception", e);
+            log.error("execute locked method occured an exception", e);
             throw e;
         } finally {
             boolean releaseResult = distributedLock.releaseLock(key);
-          //  log.debug("release lock : " + key + (releaseResult ? " success" : " failed"));
+            log.debug("release lock : " + key + (releaseResult ? " success" : " failed"));
         }
     }
 
     private String parse(String key, Method method, Object[] args) {
         String[] params = discoverer.getParameterNames(method);
         EvaluationContext context = new StandardEvaluationContext();
-        for (int i = 0; i < params.length; i ++) {
+        for (int i = 0; i < params.length; i++) {
             context.setVariable(params[i], args[i]);
         }
         return parser.parseExpression(key).getValue(context, String.class);

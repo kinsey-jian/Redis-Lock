@@ -43,7 +43,7 @@ public class RedisDistributedLock extends AbstractDistributedLock {
 
         if ((!result) && retryTimes-- > 0) {
             try {
-               // log.debug("lock failed, retrying..." + retryTimes);
+                log.debug("lock failed, retrying..." + retryTimes);
                 Thread.sleep(sleepMillis);
             } catch (InterruptedException e) {
                 return false;
@@ -70,7 +70,7 @@ public class RedisDistributedLock extends AbstractDistributedLock {
 
             return result > 0;
         } catch (Exception e) {
-            //log.error("release lock occured an exception", e);
+            log.error("release lock occured an exception", e);
         } finally {
             // 清除掉ThreadLocal中的数据，避免内存溢出
             lockFlag.remove();
@@ -87,7 +87,7 @@ public class RedisDistributedLock extends AbstractDistributedLock {
             });
             return Objects.nonNull(result);
         } catch (Exception e) {
-           // log.error("set redis occured an exception", e);
+            log.error("set redis occured an exception", e);
         }
         return false;
     }
